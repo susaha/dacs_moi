@@ -1,0 +1,33 @@
+GPUS: [0]
+
+DATALOADER:
+  NUM_WORKERS: 0
+
+APPROACH_TYPE: 'DANDA'
+#MODEL_SUB_TYPE: 'deeplabv2'                           # TODO
+MODEL_SUB_TYPE: 'deeplabv3'                          # TODO
+TRAIN_ONLY_SOURCE: False
+ENABLE_DISCRIMINATOR: True
+DISCRIMINATOR_TYPE: 'transformer_encoder' # or 'dada' # TODO
+PANOPTIC_DEEPLAB_STYLE_LR: False                      # TODO
+DADA_STYLE_LR: True                                   # TODO
+ROI_ALIGN_WINDOW_SIZE: 112 # (7*16=112) or (7*8=56)   # TODO
+
+TRAIN:
+  TRAIN_INSTANCE_BRANCH: True                         # TODO
+  TRAIN_DEPTH_BRANCH: True                           # TODO
+  IMS_PER_BATCH: 1
+  INPUT_SIZE_SOURCE: [640, 380] # [1280, 760]
+  INPUT_SIZE_TARGET: [512, 256] # [1024, 512]
+  SAVE_PRED_EVERY: 20
+  EVAL_EVERY: 20
+  TENSORBOARD_VIZRATE: 20
+  DISPLAY_LOSS_RATE: 1
+  MAX_ITER: 90000
+  FREEZE_BN: True
+  LEARNING_RATE_D: 0.00001
+  LAMBDA_DEPTH: 0.001
+
+TEST:
+  INPUT_SIZE_TARGET: [1024, 512]
+  OUTPUT_SIZE_TARGET: [2048, 1024]

@@ -1,0 +1,101 @@
+BSUB_SCRIPT_FNAME: 'ctrl/yml-config-panop/bsub_euler_expid7_5_0_2.yml'
+DACS:
+  num_classes: 19
+  utils:
+    save_checkpoint_every: 1000000
+    val_per_iter: 100000
+    log_per_iter: 10
+    tesnorboard_log_per_iter: 10000000
+    show_best_model_info_every_after: 1000000
+    show_gpu_mem_usage_every_after: 1000000
+  training:
+    num_workers: 0
+    batch_size: 2
+    data:
+      input_size: (500,500)
+
+
+ACTIVATE_PANOPTIC_EVAL: True
+DATASET:
+  RANDOM_CROP_DIM: 500 # TODO
+
+ENABLE_DISCRIMINATOR: False # TODO - SET TO FALSE
+DACS_RANDOM_CROP: True # TODO
+TRAIN_SCRIPT_NAME: 'train_panop_dacs' # TODO
+
+
+APPROACH_TYPE: 'OTHERS'
+
+MHA_DADA:
+  ACTIVATE_MHA: False
+  MODE: 0
+  POS_ENCODING: True
+  AVG_POOL_DIM_SRC: [24, 41]
+  AVG_POOL_DIM_TAR: [17, 33]
+  UPSAMPLE_SHAPE_SRC: [48, 81]
+  UPSAMPLE_SHAPE_TAR: [33, 65]
+
+# used when APPROACH_TYPE: 'DANDA'
+TRANSFORMER_ENCODER_D_MODEL: 16
+DISCRIMINATOR_TYPE: 'dada'
+
+WEIGHT_INITIALIZATION:
+  DACS_COCO_MODEL: True # TODO: original False
+  DADA_DEEPLABV2: False # TODO: original True
+  DADA_PRETRAINED: False
+  DADA_PRETRAINED_DEPTH_ENC: False
+  DADA_PRETRAINED_SINGLE_CONV_DEC: False
+  DADA_PRETRAINED_SEMANTIC_HEAD: False
+
+MODEL_TYPE: 'dacs_old' # TODO: original 'dada'
+MODEL_SUB_TYPE: 'deeplabv2'
+MODEL_FILE: 'dada_model_new'
+DADA_MODEL_BACKBONE: 'ctrl'
+EXP_SETUP: 'SYNTHIA_TO_CITYSCAPES'
+GPUS: [0]
+TRAIN_ONLY_SOURCE: False
+
+PRETRAINED_WEIGHTS_FOR_TRAIN: 'DADA_IMGNET'
+PANOPTIC_DEEPLAB_STYLE_LR: False
+DADA_STYLE_LR: True
+ADV_FEATURE_MODE: 1
+DISC_INP_DIM: 16
+
+LOSS:
+  SEMANTIC:
+    NAME: 'dada_sem_loss' # 'hard_pixel_mining' #
+  CENTER:
+    WEIGHT: 20.0
+  OFFSET:
+    WEIGHT: 0.01
+  DEPTH:
+    WEIGHT: 0.001
+
+TRAIN:
+  TRAIN_WITH_DACS: True # TODO
+  TRAIN_INSTANCE_BRANCH: False
+  TRAIN_DEPTH_BRANCH: False # TODO: when train with DADA,set it to True
+  TRAIN_DEPTH_INST_TOGETHER: False
+  TRAIN_OFFSET_HEAD: False
+  CENTER_HEAD_DADA_STYLE: False
+  IMS_PER_BATCH: 2 # TODO: original 1
+  INPUT_SIZE_SOURCE: [1280, 760] # [640, 380]
+  INPUT_SIZE_TARGET: [1024, 512] # [512, 256]
+  SAVE_PRED_EVERY: 2000
+  EVAL_EVERY: 200
+  TENSORBOARD_VIZRATE: 2000
+  DISPLAY_LOSS_RATE: 1
+  MAX_ITER: 250000
+  FREEZE_BN: False # TODO
+  IMGNET_PRETRAINED_MODEL_PATH: '/home/suman/apps/code/CVPR2021/MTI_Simon_ECCV2020/mti_simon/dada/pretrained_models'
+  DADA_PRETRAINED_MODEL_FILE_PATH: '/home/suman/apps/code/CVPR2021/MTI_Simon_ECCV2020/mti_simon/dada/pretrained_models/dada_pretrained_model_50000_5.pth'
+
+SOLVER:
+  BASE_LR: 0.00025
+  DISC_LR: 0.0001
+DATALOADER:
+  NUM_WORKERS: 0
+
+TEST:
+  INPUT_SIZE_TARGET: [1024, 512] # [512, 256]
+  OUTPUT_SIZE_TARGET: [2048, 1024]

@@ -1,0 +1,97 @@
+PLCA:
+  SPAGG_ALPHA: 0.5
+  ASSO_W: 0.1
+  GET_EMA_MODEL_TARGET_PRED: False # TODO: if False then it adds an extra forward pass, i.e., send the target image to the model and get the prediction (note DACS send the target to ema_model)
+  USE_DACS_PSEUDO_LABELS_FOR_ASSO: True # TODO: it True then PLCA consider the pseudo labels on target alongside the GT label on source to filter out valid pixel assoication
+  USE_DACS_PSEUDO_LABELS_FOR_ASSO_AFTER: 1 # here 1 is the first iteration when i_iter = 0
+# -----------------------------------
+ACTIVATE_PERF_COUNTER: False
+USE_DEPTH: False
+SYNTHIA_DATALOADING_MODE: 'original_only'
+CITYSCAPES_DATALOADING_MODE: 'dacs'
+ACTIVATE_PANOPTIC_EVAL: False
+
+DATASET:
+  RANDOM_CROP_DIM: 400 # TODO
+
+ENABLE_DISCRIMINATOR: False # TODO - SET TO FALSE
+DACS_RANDOM_CROP: True # TODO
+TRAIN_SCRIPT_NAME: 'train_panop_dacs' # TODO
+
+APPROACH_TYPE: 'OTHERS'
+
+MHA_DADA:
+  ACTIVATE_MHA: False
+  MODE: 0
+  POS_ENCODING: True
+  AVG_POOL_DIM_SRC: [24, 41]
+  AVG_POOL_DIM_TAR: [17, 33]
+  UPSAMPLE_SHAPE_SRC: [48, 81]
+  UPSAMPLE_SHAPE_TAR: [33, 65]
+
+# used when APPROACH_TYPE: 'DANDA'
+TRANSFORMER_ENCODER_D_MODEL: 16
+DISCRIMINATOR_TYPE: 'dada'
+
+WEIGHT_INITIALIZATION:
+  DACS_COCO_MODEL: True # TODO: original False
+  DADA_DEEPLABV2: False # TODO: original True
+  DADA_PRETRAINED: False
+  DADA_PRETRAINED_DEPTH_ENC: False
+  DADA_PRETRAINED_SINGLE_CONV_DEC: False
+  DADA_PRETRAINED_SEMANTIC_HEAD: False
+
+MODEL_TYPE: 'dacs_old' # TODO: original 'dada'
+MODEL_SUB_TYPE: 'deeplabv2'
+MODEL_FILE: 'dada_model_new'
+DADA_MODEL_BACKBONE: 'ctrl'
+EXP_SETUP: 'SYNTHIA_TO_CITYSCAPES'
+GPUS: [0]
+TRAIN_ONLY_SOURCE: False
+
+PRETRAINED_WEIGHTS_FOR_TRAIN: 'DADA_IMGNET'
+PANOPTIC_DEEPLAB_STYLE_LR: False
+DADA_STYLE_LR: True
+ADV_FEATURE_MODE: 1
+DISC_INP_DIM: 16
+
+LOSS:
+  SEMANTIC:
+    NAME: 'dada_sem_loss' # 'hard_pixel_mining' #
+  CENTER:
+    WEIGHT: 20.0
+  OFFSET:
+    WEIGHT: 0.01
+  DEPTH:
+    WEIGHT: 0.001
+
+TRAIN:
+  TRAIN_WITH_DACS: True # TODO
+  TRAIN_INSTANCE_BRANCH: False
+  TRAIN_DEPTH_BRANCH: False # TODO: when train with DADA,set it to True
+  TRAIN_DEPTH_INST_TOGETHER: False
+  TRAIN_OFFSET_HEAD: False
+  CENTER_HEAD_DADA_STYLE: False
+  IMS_PER_BATCH: 2 # TODO: original 1
+  INPUT_SIZE_SOURCE: [1280, 760] # [640, 380]
+  INPUT_SIZE_TARGET: [1024, 512] # [512, 256]
+  SAVE_PRED_EVERY: 10
+  EVAL_EVERY: 10
+  TENSORBOARD_VIZRATE: 10
+  DISPLAY_LOSS_RATE: 1
+  MAX_ITER: 250000
+  FREEZE_BN: False # TODO
+  IMGNET_PRETRAINED_MODEL_PATH: '/home/suman/apps/code/CVPR2021/MTI_Simon_ECCV2020/mti_simon/dada/pretrained_models'
+  DADA_PRETRAINED_MODEL_FILE_PATH: '/home/suman/apps/code/CVPR2021/MTI_Simon_ECCV2020/mti_simon/dada/pretrained_models/dada_pretrained_model_50000_5.pth'
+
+SOLVER:
+  BASE_LR: 0.00025
+  DISC_LR: 0.0001
+DATALOADER:
+  NUM_WORKERS: 0
+
+TEST:
+  INPUT_SIZE_TARGET: [1024, 512] # [512, 256]
+  OUTPUT_SIZE_TARGET: [2048, 1024]
+
+

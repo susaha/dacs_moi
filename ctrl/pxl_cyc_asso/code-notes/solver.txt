@@ -1,0 +1,46 @@
+/home/suman/apps/code/CVPR2022/pxl_cyc_uda/solver/solver.py
+
+    debug with input crop 3 x 356 x 256
+    def association(self, data_S, gt_S, data_T, gt_T, **kwargs):
+
+
+        res_T = self.net(data_T) # forward pass for the target
+
+        preds_T = res_T['out']  # tensor:1,16,33,33
+        feats_T = res_T['feat'] # tensor:1,2048,33,33
+
+
+        res_S = self.net(data_S)    # forward pass for the source
+        preds_S = res_S['out'] # tensor:1,16,33,33
+        feats_S = res_S['feat']  # tensor:1,2048,33,33
+
+        # resize gt labels (downsample to 33x33)
+        H, W = feats_S.shape[-2:]
+        new_gt_S = F.interpolate(gt_S.type(torch.cuda.FloatTensor).unsqueeze(1), size=(H, W), mode='nearest').squeeze(1) # tensor:1,33,33
+        new_gt_T = F.interpolate(gt_T.type(torch.cuda.FloatTensor).unsqueeze(1), size=(H, W), mode='nearest').squeeze(1) # tensor:1,33,33
+
+        # convert the logits to prob
+        probs_S, probs_T = F.softmax(preds_S, dim=1), F.softmax(preds_T, dim=1) # tensor:1,16,33,33; tensor:1,16,33,33
+
+        # *** COMPUTE THE ASSOICAITION LOSS ***
+        ass_loss_classifier_dict = self.ClsAssociationLoss(probs_S, probs_T, new_gt_S, new_gt_T)
+
+
+        # upsample the prediction on source from 1,16,33x33 to 1,16,256x256
+        preds = F.interpolate(preds_S, size=gt_S.shape[-2:], mode='bilinear', align_corners=False)
+
+        # compute the supervised cross entropy loss for semantic
+        ce_loss = 1.0 * self.CELoss([preds], gt_S)  # preds: 1,16,256,256; gt_S: 1,256,256
+
+        # after computing the supervised cross entropy loss loss, you now compute the superivsed lovasz_softmax los
+        lov_loss = lovasz_softmax(F.softmax(preds, dim=1), gt_S, classes='present', per_image=False, ignore=255)  # preds: 1,16,256,256; gt_S: 1,256,256
+
+        # addining cross entropy loss with lovasz_softmax loss
+        ce_loss += (cfg.TRAIN.LOV_W * get_world_size() * self.iter_size) * lov_loss
+        # cfg.TRAIN.LOV_W = 0.75
+        # get_world_size(): 1
+        # self.iter_size: 2
+
+
+
+

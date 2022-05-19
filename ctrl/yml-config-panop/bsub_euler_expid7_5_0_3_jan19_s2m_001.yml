@@ -1,0 +1,60 @@
+# TODO: if you use mapillary_panop_jan04_2022_v2 then set MAPILLARY_DATA_LOADING_STYLE: 'DADA' in the ymland bsub files
+# TODO: if you use mapillary_panop_jan04_2022_v3 then set MAPILLARY_DATA_LOADING_STYLE: 'OURS'  in the ymland bsub files
+#MAPILLARY_DATA_LOADING_STYLE: 'OURS' # TODO: load images and labels and resize them to 768 x W_new both during training and testing,W_new is computed using W_new = W_original * DSR, where DSR is the downsample ratio: = target_height / original_height,where target height = 768
+MAPILLARY_DATA_LOADING_STYLE: 'DADA' # TODO: load images and labels and resize them as per DADA style - it does padding, since DADA does not use random crop padding is required, in our case we use random crop so padding is not required
+
+#TARGET: 'Cityscapes' # TODO
+TARGET: 'Mapillary' # TODO
+
+ACTIVATE_SEMANITC_EVAL: False
+ACTIVATE_PANOPTIC_EVAL: False
+ACTIVATE_ONLY_PANOPTIC_EVAL: True
+
+NUM_VAL_SAMPLES_DURING_DEBUG: 10 # this is used by the panoptic evaluation script # TODO
+DUMP_PANOPTIC_VISUAL_IMGS: False
+INST_DEPTH_FUSION_MODE: 2
+ACTIVATE_DACS_UNLABELED_LOSS: True
+DACS_RANDOM_CROP: True
+DATASET:
+  RANDOM_CROP_DIM: 450
+GPUS: [0]
+PANOPTIC_DEEPLAB_STYLE_LR: False
+DADA_STYLE_LR: True
+LOSS:
+  SEMANTIC:
+    NAME: 'dada_sem_loss'
+  CENTER:
+    WEIGHT: 100.0
+  OFFSET:
+    WEIGHT: 0.01
+  DEPTH:
+    WEIGHT: 0.001
+TRAIN:
+  TRAIN_WITH_DACS: True
+  TRAIN_INSTANCE_BRANCH: True
+  TRAIN_DEPTH_BRANCH: True
+  CENTER_HEAD_DADA_STYLE: False
+  IMS_PER_BATCH: 2
+  INPUT_SIZE_SOURCE: [1280, 760] # [640, 380] # TODO
+  INPUT_SIZE_TARGET: [1024, 768] # [1024, 768] # TODO
+  SAVE_PRED_EVERY: 10000000
+  EVAL_EVERY: 2
+  EVAL_EVERY_PANOP: 2
+  TENSORBOARD_VIZRATE: 100000000
+  DISPLAY_LOSS_RATE: 1
+  MAX_ITER: 250000
+  FREEZE_BN: False
+  GEN_PANOPTIC_LABELS: False # TODO
+
+SOLVER:
+  BASE_LR: 0.00025
+DATALOADER:
+  NUM_WORKERS: 0 # TODO
+
+TEST:
+  INPUT_SIZE_TARGET: [1024, 768] # [1024, 768] # TODO
+#  OUTPUT_SIZE_TARGET: [2048, 1024] # for Cityscapes # TODO
+  OUTPUT_SIZE_TARGET: [1024, 768] # None for Mapillary # TODO
+  NUM_SAMPLES_DEBUGMODE: 1 # this is used by the semanitc evaluation script # TODO
+
+

@@ -1,0 +1,215 @@
+DEBUG: True
+
+#MACHINE: 0 # TODO
+MACHINE: 1 # TODO
+
+#GPUS: [0]   # TODO
+GPUS: [0, 1, 2, 3] # dgx
+#GPUS: [0, 1, 2, 3, 4, 5, 6, 7] # original
+
+MODEL_TYPE: 'panop_v1'  #  'panop_v1' or 'cvpr2021'
+USE_DATA_PARALLEL: # TODO
+ENABLE_DISCRIMINATOR:  # TODO
+TRAIN_ONLY_SOURCE: True #
+TRAIN_ORACLE: False  # TODO : when set this True, you must set TRAIN_ONLY_SOURCE also True
+DADA_STYLE_LR: False     # TODO : this sets the lr for each layer as dada style, i.e., all the decoders has 10 times bigger lr than the common encoder or backbone
+PANOPTIC_DEEPLAB_STYLE_LR: True # TODO: this sets the lr for each layer as panoptic deeplab cvpr 2020 style
+REPRODUCE_PANOPTIC_DEEPLAB: False # True # TODO: set it true when you want to train the model with cityscapes 19 classes with input dim (2048, 1024)
+PANOPTIC_DEEPLAB_DATA_AUG_ALL: True  # TODO: new entry
+PANOPTIC_DEEPLAB_DATA_AUG_ONLY_NORM: False   # TODO: new entry
+
+#TRAIN_TYPE: 0 # 'semsup'
+#TRAIN_TYPE: 1 # 'semsup_inssup'
+#TRAIN_TYPE: 2 # 'semsup_inssup_depsup'
+#TRAIN_TYPE: 3 # 'semsup_semadv'
+#TRAIN_TYPE: 4 # 'semsup_inssup_semadv_insadv'
+#TRAIN_TYPE: 5 # 'semsup_inssup_depsup_semadv_insadv_depadv'
+
+DATASET:  # imported from panoptic-deeplab  # TODO: new entry
+    CROP_SIZE: [1281, 761] # original
+    # CROP_SIZE: [1025, 513] # for debug on desktop
+    MIRROR: True
+    MIN_SCALE: 0.5
+    MAX_SCALE: 2.0
+    SCALE_STEP_SIZE: 0.1
+    MEAN: [0.485, 0.456, 0.406]
+    STD: [0.229, 0.224, 0.225]
+
+NUM_CLASSES: 16 # 19 # 16 , set this to 19 when REPRODUCE_PANOPTIC_DEEPLAB=True # TODO
+SOURCE: 'SYNTHIA'
+TARGET: 'Cityscapes'
+RESO: 'FULL'
+USE_DEPTH: True
+GEN_BINS_IN_CM:
+NUM_DEPTH_BINS: 15
+SYNTHIA_DATALOADING_MODE: 'panoptic'
+CITYSCAPES_DATALOADING_MODE: 'panoptic'
+
+DEPTH_PROCESSING: 'DADA'
+DEPTH_SAMPLE_TYPE: 'SID'
+NUM_WORKERS: 2
+NUM_WORKERS_TEST: 2
+# dataloader related param
+DATA_LIST_SOURCE: 'ctrl/dataset/synthia_list/{}.txt'
+DATA_LIST_TARGET: 'ctrl/dataset/cityscapes_list/{}.txt'
+# model param
+IS_MIV3_NEW_ARCH:
+CONVERT_PROB_TO_ENTROPY: True
+# used in ISL training
+TRAIN_ISL_FROM_SCRATCH:
+NUM_TRAIN_SAMPLES_IN_SOURCE_TARGET: 20
+IS_ISL_TRAINING:
+IS_ISL:
+
+PANOPTIC_TARGET_GENERATOR: # imported from panoptic-deeplab
+    IGNORE_LABEL: 255
+    LABEL_DIVISOR: 1000
+    IGNORE_STUFF_IN_OFFSET: True
+    SMALL_INSTANCE_AREA: 4096
+    SMALL_INSTANCE_WEIGHT: 3
+    SIGMA: 8
+    TARGET_KEYS: ['semantic', 'center', 'offset', 'semantic_weights', 'center_weights', 'offset_weights']
+    OUTPUT_KEYS: ['semantic', 'center', 'offset']
+
+DATALOADER: # imported from panoptic-deeplab
+    SAMPLER_TRAIN_SOURCE: 'TrainingSamplerSource'
+    SAMPLER_TRAIN_TARGET: 'TrainingSamplerTarget'
+    SAMPLER_TEST_TARGET:  'TestingSamplerTarget'
+    TRAIN_SHUFFLE: True
+    # NUM_WORKERS: 0  # for debug and single gpu training
+    NUM_WORKERS: 4 # used in panoptic deeplab for distributed multi gpu training on 8 gpus # TODO
+
+MODEL:  # imported from panoptic-deeplab
+    # BATCHNORM_REQUIRES_GRAD: True # TODO  # SET IT FALSE IF USING ONE BATCH SIZE
+    WEIGHTS: ''
+    BACKBONE:
+        DILATION: [False, False, False]
+        WEIGHTS:
+        PRETRAINED: True
+    DECODER:
+        IN_CHANNELS: 2048
+        FEATURE_KEY: 'res5'
+        DECODER_CHANNELS: 256
+        ATROUS_RATES: [3,6,9]
+    PANOPTIC_DEEPLAB:
+        LOW_LEVEL_CHANNELS: [1024, 512, 256]
+        LOW_LEVEL_KEY: ['res4', 'res3', 'res2']
+        LOW_LEVEL_CHANNELS_PROJECT: [128, 64, 32]
+        INSTANCE:
+            ENABLE: True
+            LOW_LEVEL_CHANNELS_PROJECT: [64, 32, 16]
+            DECODER_CHANNELS: 128
+            HEAD_CHANNELS: 32
+            ASPP_CHANNELS: 256
+            NUM_CLASSES: [1, 2]
+            CLASS_KEY: ['center', 'offset']
+    BN_MOMENTUM: 0.01
+
+
+
+LOSS: # imported from panoptic-deeplab
+    SEMANTIC:
+        NAME: 'hard_pixel_mining'
+        IGNORE: 255
+        REDUCTION: 'mean'
+        THRESHOLD: 0.7
+        MIN_KEPT: 100000
+        TOP_K_PERCENT: 0.2
+        WEIGHT: 1.0
+    CENTER:
+        NAME: 'mse'
+        REDUCTION: 'none'
+        WEIGHT: 20.0 # 200.0
+    OFFSET:
+        NAME: 'l1'
+        REDUCTION: 'none'
+        WEIGHT: 0.01
+
+SOLVER:  # imported from panoptic-deeplab
+  BASE_LR: 0.00005
+  WEIGHT_DECAY: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY_BIAS: 0.0
+  OPTIMIZER: "adam"
+  LR_SCHEDULER_NAME: "WarmupPolyLR"
+  WARMUP_ITERS: 0
+  MOMENTUM: 0.9
+  ADAM_BETAS: [0.9, 0.999]
+  ADAM_EPS: 1.0e-8
+  STEPS: [30000,]
+  GAMMA: 0.1
+  WARMUP_METHOD: "linear"
+  POLY_LR_POWER: 0.9
+  POLY_LR_CONSTANT_ENDING: 0
+  CLIP_GRADIENTS:
+      ENABLED: False
+      CLIP_TYPE: "value"
+      CLIP_VALUE: 1.0
+      NORM_TYPE: 2.0
+
+
+
+# TRAIN CONFIGS
+TRAIN:
+    RESUME: False
+    RANDOM_SEED: 1
+    SET_SOURCE: "all"
+    SET_TARGET: "train"
+    DA_METHOD: 'SEMSEG'
+    MODEL: 'DeepLabv2'
+    MULTI_LEVEL: False
+    # BATCH_SIZE_SOURCE: 1
+    # BATCH_SIZE_TARGET: 1
+    MAX_ITER: 90000
+    EARLY_STOP: 55000
+    POWER: 0.9
+    # loss weights
+    LAMBDA_SEG: 1.0
+    LAMBDA_SRH: 1.0
+    LAMBDA_DEPTH: 0.001
+    LAMBDA_ADV_MAIN: 0.001
+    WEIGHT_DECAY: 0.0005
+    # learning rates
+    LEARNING_RATE: 0.00005
+    LEARNING_RATE_D: 0.0001
+    MOMENTUM: 0.9
+    EVAL_EVERY: 99999999999 # 10000 # 5000 # TODO
+    SAVE_PRED_EVERY: 30000 # 5000
+    TENSORBOARD_VIZRATE: 10000 # 1000
+    DISPLAY_LOSS_RATE: 20 # 50 TODO
+    SNAPSHOT_DIR:
+    # IMS_PER_BATCH: 1 # single gpu training          # TODO
+    IMS_PER_BATCH: 4 # mult-gpu training on dgx
+    # IMS_PER_BATCH: 8 # mult-gpu training on Euler
+
+
+# TEST CONFIGS
+TEST:
+    SET_TARGET: "val"
+    MODE: 'best'
+    BATCH_SIZE_TARGET: 1
+    EVAL_INSTANCE: True
+    EVAL_PANOPTIC: True
+    TEST_TIME_AUGMENTATION: False
+    ORACLE_SEMANTIC: False
+    DEBUG: False
+    INSTANCE_SCORE_TYPE: 'semantic'
+    GPUS: [0]
+    IMS_PER_BATCH: 1
+    DISPLAY_LOG_EVERY: 20
+
+# model weight initialization
+WEIGHT_INITIALIZATION:
+    DADA_DEEPLABV2:
+    RESUME_FROM_SNAPSHOT:
+    RESUME_FROM_SNAPSHOT_GIVEN:
+
+POST_PROCESSING:
+    STUFF_AREA: 2048
+    CENTER_THRESHOLD: 0.1
+    NMS_KERNEL: 7
+    TOP_K_INSTANCE: 200
+
+
+

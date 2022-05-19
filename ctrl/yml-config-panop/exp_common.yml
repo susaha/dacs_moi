@@ -1,0 +1,11 @@
+# this file should be always empty
+# when I debug, I read from YML file
+# but during actual training, I pass config from bsub script
+# the way it works: - it first loads the default configs from the ctrl/config_panop/default.py
+# then it upates the configs which are defined in the YML file
+# finally it updates the configs which are defined in the bsub script
+# now if you mentioned any config here assuming that I don't use anything from here,
+# but the problem happens, if you don't define anything assuming that you the script will be used the default config from the default.py
+# and mistakely you mention the same config here with a different value than the default,
+# then the default config will be overwritten by this value
+NOT_IN_USE: True
