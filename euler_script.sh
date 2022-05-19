@@ -1,3 +1,4 @@
+# $ bsub -J sanity1 -n 24 -R "rusage[mem=5000,ngpus_excl_p=1,scratch=9000]" -W 48:00 < bsub_scripts/bsub_euler_expid7_5_0_1.sh
 source ~/panoptic/bin/activate
 
 echo "temp directory for the job" $TMPDIR

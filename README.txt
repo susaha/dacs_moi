@@ -1,0 +1,1 @@
+$ bsub -J sanity1 -n 24 -R "rusage[mem=5000,ngpus_excl_p=1,scratch=9000]" -W 48:00 < euler_script.sh
